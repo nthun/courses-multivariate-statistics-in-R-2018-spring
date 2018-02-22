@@ -19,13 +19,13 @@
 # *: means multiply
 # log(): natural log
 # pi: pi (surprise)
-# sin(): sinus.
+# sin(): sinus
 # Wrap your expressions in () if you want them to be evaluated as you want
 
 # Variables
 
 number1 <- 55 # Assign a value to a variable
-Number2 = 66 # = is the same as <-
+Number2 = 66 # = is the same as <-, but <- is the standard as it is directional
 
 number1 + number2
 # Error: object 'number2' not found
@@ -34,10 +34,18 @@ number1 + number2
 number1 +      Number2
 # [1] 121
 
+# There are also functions in are, that are basically commands.
+# Functions usually have parameters, that define what data to use, and how the command should be executed
+# You always have to use a parentheses after the names of the functions, even if it does not have any parameters.
+# For example, let's see how to use commands to make plots
+
 # Graphics
-x <- rnorm(1000, mean = 100, sd = 10) # Generate 1000 random numbers with a mean of 100, and a standard deviation of 10
+# First, we use the rnorm() command that generates 1000 random numbers with a mean of 100, and a standard deviation of 10. So this function takes three parameters (how many numbes, what should be the mean and sd). 
+
+x <- rnorm(1000, mean = 100, sd = 10) 
 x # Simply print the content of a variable
-hist(x) # Plot the distribution
+# You can create a histogram of the distribution of the variable. This function only requires 1 parameter to create the plot, but actually, you can use several other parameters to make the plots more fancy.
+hist(x)
 
 # How to get help in R
 ?hist # This will show you what parameters you can use when drawing a histogram
@@ -67,14 +75,13 @@ fruits[c(1,3,5)]
 # Remove the first 3, and the 7th elements
 fruits[-c(1:3, 7)]
 
-
 # Data frames
-# built in dataframes
+# There are built in dataframes in R, just to try things
 
 data("USArrests") # Load a built in data frame. This one is a about US arrests
 USArrests  # Check the data.frame
 
-str(USArrests) # Check the types of variables
+str(USArrests) # Check the structure of the data frame, types of variables, etc.
 # 'data.frame':	50 obs. of  4 variables:
 # $ Murder  : num  13.2 10 8.1 8.8 9 7.9 3.3 5.9 15.4 17.4 ...
 # $ Assault : int  236 263 294 190 276 204 110 238 335 211 ...
@@ -82,7 +89,7 @@ str(USArrests) # Check the types of variables
 # $ Rape    : num  21.2 44.5 31 19.5 40.6 38.7 11.1 15.8 31.9 25.8 ...
 
 head(USArrests) # First 5 records
-tail(USArrests, 10) # Last 10 recorda
+tail(USArrests, 10) # Last 10 records
 
 names(USArrests) # Variable names
 row.names(USArrests) # Name of the observations/records
@@ -124,4 +131,3 @@ library(swirl) # Load the package to the R session
 # To stat swirl, just type:
 swirl()
 
-# You always have to use a parentheses after the names of the functions, even if it does not have any parameters.
