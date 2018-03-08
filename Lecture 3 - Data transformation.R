@@ -1,4 +1,11 @@
-### Lecture 3
+### Lecture 3: Preparing data for analysis, data wrangling (transformation) in the tidyverse
+# Dolution to the first task
+library(ggplot2)
+ggplot(ToothGrowth) +
+    aes(x = dose, y = len, group = dose) +
+    geom_boxplot() +
+    facet_wrap(~supp)
+    
 # Install the tidyverse package. All the packages that we will use today are included in it
 install.packages("tidyverse")
 
@@ -80,7 +87,6 @@ solution_1 <-
     arrange(-life_exp_med)
 
 # Task 1 data viz   
-library(ggplot2)
 solution_1 %>% 
     ggplot() +
         aes(x = continent, y = life_exp_med) +
@@ -90,11 +96,20 @@ solution_1 %>%
 # Task 2 solution
 solution_2 <-
     gapminder %>% 
-    filter(country %in% c("Hungary","Slovak Republic","Austria")) %>% 
+    filter(country %in% c("Hungary","Norway","Austria")) %>% 
     group_by(country) %>% 
     mutate(mean_pop = mean(pop),
            cent_pop = pop - mean_pop)
 
+# First let's see what does the data look like without centering
+solution_2 %>% 
+    ggplot() +
+    aes(x = year, y = pop, group = country, color = country) +
+    geom_line(size = 1.5) +
+    geom_hline(yintercept = 0) +
+    scale_y_continuous()
+
+# And the solution with centering is the following. Mind that it will remove baseline differences, but trends will be more visible
 solution_2 %>% 
     ggplot() +
         aes(x = year, y = cent_pop, group = country, color = country) +
@@ -128,6 +143,7 @@ who_long <-
 
 library(stringr)
 
+# Mind that that the data does not change, as we don't save it to any variable
 who_long %>% 
     mutate(variable = str_replace(variable, "new_",""))
     
@@ -145,18 +161,24 @@ who_tidy <-
     mutate(variable = str_replace(variable, "new_","")) %>% 
     separate(col = variable, into = c("test_result","gender_age"), sep = "_") %>% 
     mutate(gender = gender_age %>% substring(1,1),
-           age = gender_age %>% substring(2))
+           age_group = gender_age %>% substring(2))
+
+who_tidy
 
 # Now we can verify what age groups we have
 who_tidy %>% 
     distinct(age)
 
 # We can also transform the data to wide format, for e.g. the age groups. 
+# Let's say we only want to make the age groups in wide format, but keep the gender,  test results, year, etc. in long format
 who_tidy %>% 
-    spread(age, value)
+    spread(age_group, value)
 
+# From here, it would be quite easy to drop redundant variables, like gender_age
+who_tidy %>% 
+    spread(age_group, value) %>% 
+    select(-gender_age)
 
-    
-    
+# Note that wide format is not the optimal format for data analysis
     
     
