@@ -3,6 +3,8 @@ library(dplyr)
 
 # Let's use the titanic dataset
 install.packages("titanic")
+install.packages("skimr")
+install.packages("ggridges")
 library(titanic)
 
 # Check the codebook to identify variables
@@ -71,6 +73,7 @@ read_spss("datasets/movies.sav")
 
 ### Exploratory data analysis
 # To examine the distribution of a categorical variable, use a bar chart
+library(ggplot2)
 ?diamonds
 
 ggplot(data = diamonds) +
@@ -85,7 +88,14 @@ ggplot(data = diamonds) +
     geom_histogram(mapping = aes(x = carat), binwidth = 0.5)
 
 # Typical values
-summary(diamonds$carat)
+# Oldschool values are available by useing summary on a dataset or just one variable
+summary(diamonds)
+summary(diamonds$cut)
+
+# Use skimr::skim to get quick textual info about your variables
+library(skimr)
+skimr::skim(diamonds)
+
 ggplot(diamonds) +
     geom_density(aes(x = carat), fill = "red")
 
@@ -129,15 +139,11 @@ ggplot(data = diamonds) +
     geom_density(alpha = .3)
 
 # However, this does not look that great, so let's check out a visualization that shows distributions in a way that is is also readable. For this, we need the ggridges package
-install.packages("ggridges")
+
 library(ggridges)
 ggplot(diamonds) +
     aes(x = price, y = cut) +
     geom_density_ridges()
-
-# You can also use a violin plot (or bean plot) for the same thing
-ggplot(data = diamonds, mapping = aes(x = cut, y = price)) +
-    geom_violin()
 
 # Checking the covariation of a continuous and a categorical variable
 # To check the typical values along with a distribution summary in a plot, use boxplot
@@ -145,7 +151,7 @@ ggplot(data = diamonds, mapping = aes(x = cut, y = price)) +
     geom_boxplot()
 
 # We can also reorder values based on the median (central line in boxplot)
-ggplot(data = diamonds, mapping = aes(x = reorder(cut, price, FUN = median), y = price)) +
+ggplot(data = diamonds, mapping = aes(x = forcats::fct_reorder(cut, price), y = price)) +
     geom_boxplot()
 
 # Two categorical variables
