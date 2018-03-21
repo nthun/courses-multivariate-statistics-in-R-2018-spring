@@ -1,5 +1,5 @@
 # Lecture 4 - EDA
-library(tidyverse)
+library(dplyr)
 
 # Let's use the titanic dataset
 install.packages("titanic")
@@ -20,7 +20,6 @@ titanic_train %>%
 
 # R has its own data format (.RData), that stores variables from R. You can load an R object using the load() function.
 # Usually, it is enough to provide the file name (with the relative or absolute path), but import functions often has optional parameters
-library(tidyverse)
 
 load("datasets/movies.RData")
 
