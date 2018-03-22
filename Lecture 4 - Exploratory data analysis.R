@@ -1,22 +1,24 @@
 # Lecture 4 - EDA
-library(dplyr)
 
 # Let's use the titanic dataset
 install.packages("titanic")
 install.packages("skimr")
 install.packages("ggridges")
+
+# Load packages
+library(dplyr)
 library(titanic)
 
 # Check the codebook to identify variables
+titanic_train %>% as_tibble()
 ?titanic_train
 
 # Solution for Titanic question 1
 titanic_train %>% 
     filter(Age == 50 & Sex == "female" & Pclass == 1, SibSp + Parch == 0)
 
-# Data importing
+### Data importing
 # The easies way is to use data import from the "Files" window
-
 
 # IMPORTANT!! IN ORDER TO USE THIS CODE, YOU ALSO HAVE TO DOWNLOAD THE DATAFILES FROM THE COURSE'S PAGE, THAT YOU CAN FIND IN THE DATASETS LIBRARY! https://osf.io/xcvn7/
 
@@ -70,22 +72,24 @@ library(haven)
 
 read_spss("datasets/movies.sav")
 
-
 ### Exploratory data analysis
 # To examine the distribution of a categorical variable, use a bar chart
 library(ggplot2)
+diamonds
 ?diamonds
-
-ggplot(data = diamonds) +
-    geom_bar(mapping = aes(x = cut))
 
 # See the number of observations grouped by the cut variable
 diamonds %>% 
     count(cut)
 
+ggplot(data = diamonds) +
+    aes(x = cut) +
+    geom_bar()
+
 # To examine the distribution of a continuous variable, use a histogram
 ggplot(data = diamonds) +
-    geom_histogram(mapping = aes(x = carat), binwidth = 0.5)
+    aes(x = carat) +
+    geom_histogram(binwidth = 0.5)
 
 # Typical values
 # Oldschool values are available by useing summary on a dataset or just one variable
@@ -97,15 +101,18 @@ library(skimr)
 skimr::skim(diamonds)
 
 ggplot(diamonds) +
-    geom_density(aes(x = carat), fill = "red")
+    aes(x = carat) +
+    geom_density(fill = "grey50")
 
 # Unusual values
 ggplot(diamonds) + 
-    geom_histogram(mapping = aes(x = y), binwidth = 0.5)
+    aes(x = y) +
+    geom_histogram(binwidth = 0.5)
 
 # To make it easy to see the unusual values, we need to zoom to small values of the y-axis with coord_cartesian()
-ggplot(diamonds) + 
-    geom_histogram(mapping = aes(x = y), binwidth = 0.5) +
+ggplot(diamonds) +
+    aes(x = y) +
+    geom_histogram(binwidth = 0.5) +
     coord_cartesian(ylim = c(0, 50))
 
 # Let's save the unusual values that are smaller than 3 and larger than 20
@@ -130,8 +137,8 @@ ggplot(data = diamonds2, mapping = aes(x = x, y = y)) +
 # It is possible to see differing distributions in a continuous vaiable for separate categorical levels
 # To check  frequency distribution of price by cut, we can use frequency polygons (similar to histograms)
 ggplot(data = diamonds) + 
-    aes(x = price) +
-    geom_freqpoly(mapping = aes(color = cut), binwidth = 500)
+    aes(x = price, color = cut) +
+    geom_freqpoly(binwidth = 500)
 
 # Or you can choose to use density plots, those show relative frequencies (but the purpose is similar)
 ggplot(data = diamonds) + 
@@ -147,42 +154,49 @@ ggplot(diamonds) +
 
 # Checking the covariation of a continuous and a categorical variable
 # To check the typical values along with a distribution summary in a plot, use boxplot
-ggplot(data = diamonds, mapping = aes(x = cut, y = price)) +
+ggplot(data = diamonds) +
+    aes(x = cut, y = price) +
     geom_boxplot()
 
 # We can also reorder values based on the median (central line in boxplot)
-ggplot(data = diamonds, mapping = aes(x = forcats::fct_reorder(cut, price), y = price)) +
+ggplot(data = diamonds) +
+    aes(x = forcats::fct_reorder(cut, price), y = price) +
     geom_boxplot()
 
 # Two categorical variables
 # Comparing how color and cut covary, we can simply calculate the number of cases
 diamonds %>% 
-    count(color, cut)
+    count(color, cut, sort = TRUE)
 
 # But we are better off if we also visualize the results 
 # For e.g. we can use the count plot. This shows the number of cases by size of the dots
 ggplot(data = diamonds) +
-    geom_count(mapping = aes(x = cut, y = color))
+    aes(x = cut, y = color) +
+    geom_count()
 
 # We can also make a heatmap, where we visualize the frequency of cases as color density
 # In this example, darker colors mean less and brither colors mean more cases
 diamonds %>% 
     count(color, cut) %>%  
-    ggplot(mapping = aes(x = color, y = cut)) +
+    ggplot() +
+    aes(x = color, y = cut) +
     geom_tile(mapping = aes(fill = n))
 
 # Two continuous variables
 # The most obvious visualization is the simple scatter plot
 ggplot(data = diamonds) +
-    geom_point(mapping = aes(x = carat, y = price))
+    aes(x = carat, y = price) +
+    geom_point()
 
 # Or by binning the data points that are close to each other
 ggplot(diamonds) +
-    geom_bin2d(mapping = aes(x = carat, y = price))
+    aes(x = carat, y = price) +
+    geom_bin2d()
 
 # You can also use hexagon bins instead of rectangles
 ggplot(diamonds) +
-    geom_hex(mapping = aes(x = carat, y = price))
+    aes(x = carat, y = price) +
+    geom_hex()
 
 
 ### PRACTICE ON TITANIC DATA
