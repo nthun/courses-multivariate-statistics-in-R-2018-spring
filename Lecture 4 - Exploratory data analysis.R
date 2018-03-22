@@ -4,6 +4,7 @@
 install.packages("titanic")
 install.packages("skimr")
 install.packages("ggridges")
+install.packages("GGally")
 
 # Load packages
 library(dplyr)
@@ -198,6 +199,11 @@ ggplot(diamonds) +
     aes(x = carat, y = price) +
     geom_hex()
 
+# You can also automatically visualize the distributions and associations in your dataset, but it may not work well for great datasets (therefore here I only visualize the first 5 variables)
+library(GGally)
+diamonds %>% 
+    select(1:5) %>% 
+    ggpairs()
 
 ### PRACTICE ON TITANIC DATA
 # Solution for Titanic question 2
