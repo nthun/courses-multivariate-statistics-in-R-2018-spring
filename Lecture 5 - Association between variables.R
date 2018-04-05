@@ -76,8 +76,39 @@ cocktails %>%
         geom_text_repel() +
         facet_wrap(~property, nrow = 2, scales = "free_y")
 
-## Correlation in R
+### LISTS
+# We have a list object, with 4 different plots
+# The names of the list elements are the same as the unique values of the Embark variable in titanic_train
+plots %>% names()
 
+# We got 4 separate plots, that you can see by typing the element name.
+plots[1]
+plots[2]
+plots[3]
+plots[[4]]
+
+# We can also refer to them by name, if the list is named (mind the quote)
+plots[["Q"]]
+
+a <- list(a = 1:3, b = "a string", c = pi, d = list(-1, -5))
+
+# Indexing a list can be a bit difficult first. There are 3 ways of subsetting a list
+# [ returns a sub-list. The result will always be a list
+a[1:2] %>% str()
+
+# [[ returns a single component of a list. It removes the level of hierarchy
+a[[1]] %>% str()
+a[[4]] %>% str() # This remains a list, because this was a list in a list
+
+# You can use $ as a shorthand for extracting named elements
+a$a
+# is the same as
+a[["a"]]
+
+# Let's write these plots to 4 separate files to the test_dir subdirectory
+walk(a, ggsave(str_glue()))
+
+## Correlation in R
 # The simplest way is the built in cor() function
 cor(cocktails$abv, cocktails$sugar)
 
@@ -193,4 +224,22 @@ cocktails %>%
     shapiro.test() %>%
     str()
 
+# Chi squared test
+# Use the survey from the MASS package
+?MASS::survey
+survey <- MASS::survey
+
+# We want to test whether smoking and exercise frequency are independent of each other
+
+# First we create a contingency table
+smoke_exer <- table(survey$Smoke, survey$Exer)
+
+chisq.test(smoke_exer)
+# It seems like smoking is not 
+
+survey %>% 
+    group_by(Smoke, Exer) %>% 
+    count() %>% 
+    drop_na() %>% 
+    ggplot()
 
