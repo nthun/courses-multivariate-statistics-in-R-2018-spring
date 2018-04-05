@@ -81,15 +81,6 @@ cocktails %>%
 # The names of the list elements are the same as the unique values of the Embark variable in titanic_train
 plots %>% names()
 
-# We got 4 separate plots, that you can see by typing the element name.
-plots[1]
-plots[2]
-plots[3]
-plots[[4]]
-
-# We can also refer to them by name, if the list is named (mind the quote)
-plots[["Q"]]
-
 a <- list(a = 1:3, b = "a string", c = pi, d = list(-1, -5))
 
 # Indexing a list can be a bit difficult first. There are 3 ways of subsetting a list
