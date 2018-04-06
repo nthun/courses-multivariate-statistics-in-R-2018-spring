@@ -225,12 +225,25 @@ survey <- MASS::survey
 # First we create a contingency table
 smoke_exer <- table(survey$Smoke, survey$Exer)
 
+# The order of the categories is scrambled, so we should sort reorder them
+survey <-
+    survey %>% 
+    as_tibble() %>% 
+    mutate(Smoke = fct_relevel(Smoke, c("Never", "Occas", "Regul", "Heavy")),
+           Exer = fct_relevel(Exer, c("None", "Some", "Freq")))
+
+# Do the table againwith the good order
+smoke_exer <- table(survey$Smoke, survey$Exer)
+
 chisq.test(smoke_exer)
 # It seems like smoking is not 
 
+# Show the frequencies on a tile plot. I'm log transforming the frequencies to make them show better
 survey %>% 
     group_by(Smoke, Exer) %>% 
     count() %>% 
     drop_na() %>% 
-    ggplot()
+    ggplot() +
+    aes(x = Exer, y = Smoke, fill = n %>% log()) +
+    geom_tile()
 
