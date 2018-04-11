@@ -7,6 +7,12 @@ library(broom)
 cocktails <- read_tsv("https://raw.github.com/nthun/cocktail-balance/master/cocktail_data.tsv")
 cocktails <- read_tsv("http://bit.ly/2zbj7kA") # Same stuff, but shortened url
 
+# read tech_at_meals dataset
+tech <- read_csv("https://raw.githubusercontent.com/nthun/courses-multivariate-statistics-in-R-2018-spring/cuiling520-patch-1/datasets/tech_at_meals.csv") %>% 
+        drop_na() 
+tech_code_book <- read_csv("https://raw.githubusercontent.com/nthun/courses-multivariate-statistics-in-R-2018-spring/cuiling520-patch-1/datasets/tech_code_book.csv")
+
+
 # To be able to use catagorical variables in statistical models, we may need to convert the categories to dummy variables. This means that the variable name will be the category name, and if this category is true for the observation, the value of the variable will be 1, or otherwise 0.
 # Task: create dummy coded variables in the cocktail dataset  from the type variable
 cocktails %>% distinct(type)
@@ -25,10 +31,20 @@ lm(abv ~ acid, data = cocktails)
 acid_lm <- lm(abv ~ acid, data = cocktails)
 summary(acid_lm)
 
+# simple linear regression for tech dataset 
+# predictor : age, outcome variable: question_6 (rating of appropriateness for adult sending/reading texts at meals)
+adult_lm <- lm(question_6 ~ age, data = tech)
+summary(adult_lm)
+
 # This also works without storing the results. However when you use pipes, mind that in lm(), data is not the first parameter
 cocktails %>% 
     lm(abv ~ acid, data = .) %>% 
     summary()
+
+# tech dataset
+tech %>% 
+  lm(question_6 ~ age, data = .) %>% 
+  summary()
 
 # Plot the linear regression
 cocktails %>% 
@@ -37,19 +53,36 @@ cocktails %>%
     geom_point() +
     geom_smooth(method = "lm", se = FALSE) 
 
+tech %>% 
+  ggplot() +
+  aes(y = question_6, x = age) +
+  # geom_point doesn't seem sensible for likert-scale variable, so I use geom_col
+  geom_col() +
+  geom_smooth(method = "lm", se = FALSE) + # Does it make sense?
+  ylab("appropriateness for adult sending/reading texts at meals")
+
+
 # To get clean results, use the broom package.
 # tidy() puts returns the model summary in a neat data frame format
 tidy(acid_lm)
+tidy(adult_lm)
 # Augments adds important new columns to your data frames, such as the residuals (.resid), and predicted values corresponding your independent variables. These can be useful for residual diagnostics.
 augment(acid_lm, cocktails)
-# Glimpse returns important model performance metrics.
+augment(adult_lm, tech)
+# Glance returns important model performance metrics.
 glance(acid_lm)
+glance(adult_lm)
 
 # To get the standardized coefficients (scale free), you need to standardize the output and predictor variables. Use the scale() function on all variables in the model
 acid_lm_std <- lm(scale(abv) ~ scale(acid), data = cocktails)
 summary(acid_lm_std)
+
+adult_lm_std <- lm(scale(question_6) ~ scale(age), data = tech)
+summary(adult_lm_std)
+
 # You can check that the slope of acid now matches the correlation between abv and acid
 cor(cocktails$abv, cocktails$acid)
+cor(tech$question_6, tech$age)
 
 ## Predicting values based on the model
 # Create data with new 
@@ -58,6 +91,11 @@ newdata <- tibble(acid = c(0.2, 0.3, 0.4))
 predict(acid_lm, newdata)
 # modelr::add_predictions() returns a data frame. This one is the preferable.
 modelr::add_predictions(newdata, acid_lm)
+
+# tech data model prediction
+new_age <- tibble(age = sample(8:88, 50, replace = T))
+predict(adult_lm, new_age)
+modelr::add_predictions(new_age, adult_lm)
 
 ## Model fit measures
 # See model fitting "game" at http://www.dangoldstein.com/regression.html
@@ -73,6 +111,16 @@ cocktails %>%
     geom_segment(aes(xend = acid, yend = .fitted), linetype = "dashed", color = "red", size = 1.2) +
     geom_point(size = 3)
 
+# tech plot looks...
+tech %>% 
+  augment(lm(question_6 ~ age, data = .), .) %>% 
+  ggplot() +
+  aes(y = question_6, x = age) +
+  geom_smooth(method = "lm", se = FALSE, size = 1.5, color = "black") +
+  geom_segment(aes(xend = age, yend = .fitted), linetype = "dashed", color = "red", size = 1.2) +
+  geom_point(size = 3) +
+  ylab("appropriateness for adult sending/reading texts at meals")
+
 # All variability in the outcome variable (variance)
 # This plots shows the total variance of the outcome variable (summary of the blue lines)
 cocktails %>% 
@@ -82,6 +130,16 @@ cocktails %>%
     geom_hline(aes(yintercept = mean_abv), size = 1.5) +
     geom_segment(aes(xend = acid, yend = mean_abv), linetype = "dashed", color = "blue", size = 1.2) +
     geom_point(size = 3)
+
+# tech dataset
+tech %>% 
+  mutate(mean_question6 = mean(question_6)) %>% 
+  ggplot() +
+  aes(y = question_6, x = age) +
+  geom_hline(aes(yintercept = mean_question6), size = 1.5) +
+  geom_segment(aes(xend = age, yend = mean_question6), linetype = "dashed", color = "blue", size = 1.2) +
+  geom_point(size = 3) +
+  ylab("appropriateness for adult sending/reading texts at meals")
 
 # Improvement of the fit by using the model, compared to only using the mean
 # This plots shows the total variance of the outcome variable (summary of the blue lines)
@@ -95,6 +153,17 @@ cocktails %>%
     geom_segment(aes(xend = acid, yend = mean_abv, y = .fitted), linetype = "dashed", color = "purple", size = 1.2) +
     geom_point(size = 2)
 
+# tech dataset
+tech %>% 
+  augment(lm(question_6 ~ age, data = .), .) %>% 
+  mutate(mean_question6 = mean(question_6)) %>% 
+  ggplot() +
+  aes(y = question_6, x = age) +
+  geom_hline(aes(yintercept = mean_question6), size = 1.5) +
+  geom_smooth(method = "lm", se = FALSE, size = 1.5, color = "black") +
+  geom_segment(aes(xend = age, yend = mean_question6, y = .fitted), linetype = "dashed", color = "purple", size = 1.2) +
+  geom_point(size = 2) +
+  ylab("appropriateness for adult sending/reading texts at meals")
 
 
 ## Checking the assumptions for linear regression
@@ -122,12 +191,25 @@ cocktails %>%
     aes(.resid) +
     geom_histogram(bins = 10)
 
+# tech residuals distribution doesn't look good
+tech %>% 
+  augment(lm(question_6 ~ age, data = .), .) %>% 
+  ggplot() +
+  aes(.resid) +
+  geom_histogram(bins = 10)
+
 # We can also do a normality test on the residuals
 # The Shapiro-Wilks test shows that the residuals are normally distributed
 cocktails %>% 
     augment(lm(abv ~ acid, data = .), .) %>% 
     pull(.resid) %>% 
     shapiro.test(.)
+
+# abnormal distribution of residuals for tech data - extremely small p-value
+tech %>% 
+  augment(lm(question_6 ~ age, data = .), .) %>% 
+  pull(.resid) %>% 
+  shapiro.test(.)
 
 # To explore the residuals we are actually better off to use the ggfortify package to make us diagnostic plots, using the autoplot() function
 if (!require(ggfortify)) install.packages("ggfortify")
@@ -139,11 +221,15 @@ autoplot(acid_lm, which = 1:6, label.size = 3)
 # Let's store the diagnostic values in a variable
 acid_lm_diag <- augment(acid_lm, cocktails)
 
-# We can single out observations with the clice() function
+# diagnostic plots of tech data
+autoplot(adult_lm, which = 1:6, label.size = 3)
+adult_lm_diag <- augment(adult_lm, tech)
+
+# We can single out observations with the slice() function
 cocktails %>% 
     slice(c(9, 41, 42, 44, 45))
 
-# We can rerun the lm without cases that have zero acid
+# We can return the lm without cases that have zero acid
 acid_lm_clean <-
     cocktails %>% 
     filter(acid != 0) %>% 
@@ -159,6 +245,7 @@ autoplot(acid_lm_clean, which = 1:6)
 dfbeta(acid_lm) # Change in model parameters
 dffits(acid_lm) # Change in residual
 
+
 ## MULTIPLE REGRESSION
 # Syntax for interactions
 # Add multiple predictors: <outcome variable> ~ <predictor 1> + <predictor 2>
@@ -167,14 +254,29 @@ dffits(acid_lm) # Change in residual
 lm1 <- lm(abv ~ acid + sugar, data = cocktails)
 summary(lm1)
 tidy(lm1)
+
+# predictor 2 : question_14 (frequency of using phone at meals)
+adult_lm1 <- lm(question_6 ~ age + question_14, data = tech)
+summary(adult_lm1)
+tidy(adult_lm1)
+
 # Add multiple predictors AND their interactions: <outcome variable> ~ <predictor 1> * <predictor 2>
 lm2 <- lm(abv ~ acid * sugar, data = cocktails)
 summary(lm2)
 tidy(lm2)
+
+adult_lm2 <- lm(question_6 ~ age * question_14, data = tech)
+summary(adult_lm2)
+tidy(adult_lm2)
+
 # Add ONLY the interaction of predictors: <outcome variable> ~ <predictor 1> : <predictor 2>
 lm3 <- lm(abv ~ acid : sugar, data = cocktails)
 summary(lm3)
 tidy(lm3)
+
+adult_lm3 <- lm(question_6 ~ age : question_14, data = tech)
+summary(adult_lm3)
+tidy(adult_lm3)
 
 # Get the confidence intervals for parameters
 confint(lm1, level = 0.95)
@@ -185,6 +287,11 @@ lm_cat <- lm(abv ~ acid : sugar + type, data = cocktails)
 # Use the forcats::fct_relevel() function
 lm4 <- lm(abv ~ acid : sugar + fct_relevel(type, "carbonated"), data = cocktails)
 tidy(lm4)
+
+# tech data
+adult_cat <- lm(question_6 ~ age : question_14 + country, data = tech)
+adult_lm4 <- lm(question_6 ~ age : question_14 + fct_relevel(country, "United States"), data = tech)
+tidy(adult_lm4)
 
 ## Model selection
 # You can compare models if you use the same data, and the same approach to get the regression line
@@ -197,13 +304,19 @@ glance(lm2)
 glance(lm3)
 glance(lm4)
 
+glance(adult_lm1)
+glance(adult_lm2)
+glance(adult_lm3)
+glance(adult_lm4)
+
 # You can also compare the logLik models using the anova() function. It returns an F value, which is significant if difference.
 anova(lm1, lm3)
+anova(adult_lm1, adult_lm3)
 # This tells us that the more complicated model is not significantly better, so we should not use it
 
 # You can have more then 2 models, and the comparison refers to the _PREVIOUS_ model (so not the baseline). Pair-wise comparisons are thus preferable
 anova(lm1, lm2, lm3)
-
+anova(adult_lm1, adult_lm2, adult_lm3)
 # Based on the comparisons, there is no significant diffference. So we should choose the simplest model, that has the smallest df! It is model number 3!
 
 # To report the results of regression, you have to use a table, according to APA6. To create such a table, the easiest is to use the stargazer package, that collects all information from the models, and creates a nice table.
@@ -212,6 +325,8 @@ library(stargazer)
 
 # To get the table in the console, use the type = "text" argument.
 stargazer(lm1, lm2, title = "Results", align = TRUE, type = "text")
+
+stargazer(adult_lm1, adult_lm2, title = "Results for tech at meals", align = TRUE, type = "text")
 
 # You can also have the table in different formats, e.g. html. If you do this, you can save the object and view the results using your web browser. We will later learn a way to include those tables to your manuscripts.
 
@@ -245,3 +360,29 @@ results_table_html <-
 
 # You can save the results using the write_lines() function, and open the html in the browser
 write_lines(results_table_html, "results_table.html")
+
+
+# add standardized coefficients for tech data
+adult1_std <- lm.beta(adult_lm1)
+adult2_std <- lm.beta(adult_lm2)
+adult3_std <- lm.beta(adult_lm3)
+adult4_std <- lm.beta(adult_lm4)
+
+adult_table_html <- stargazer(
+            adult1_std,
+            adult2_std,
+            adult3_std,
+            adult4_std,
+            coef = list(adult1_std$standardized.coefficients,
+                        adult2_std$standardized.coefficients,
+                        adult3_std$standardized.coefficients,
+                        adult4_std$standardized.coefficients),
+            title = "Model comparison of tech data",
+            dep.var.labels = "appropriateness for adult sending/reading texts at meals",
+            align = TRUE,
+            ci = TRUE,
+            df = TRUE,
+            digits = 2,
+            type = "html") %>% 
+
+write_lines(adult_table_html, "tech_results_table.html")
