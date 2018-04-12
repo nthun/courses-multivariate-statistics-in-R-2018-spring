@@ -127,7 +127,7 @@ cocktails %>%
 cocktails %>% 
     augment(lm(abv ~ acid, data = .), .) %>% 
     pull(.resid) %>% 
-    shapiro.test(.)
+    shapiro.test()
 
 # To explore the residuals we are actually better off to use the ggfortify package to make us diagnostic plots, using the autoplot() function
 if (!require(ggfortify)) install.packages("ggfortify")
@@ -139,7 +139,7 @@ autoplot(acid_lm, which = 1:6, label.size = 3)
 # Let's store the diagnostic values in a variable
 acid_lm_diag <- augment(acid_lm, cocktails)
 
-# We can single out observations with the clice() function
+# We can single out observations with the slice() function
 cocktails %>% 
     slice(c(9, 41, 42, 44, 45))
 
