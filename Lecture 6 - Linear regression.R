@@ -203,7 +203,7 @@ tech %>%
 cocktails %>% 
     augment(lm(abv ~ acid, data = .), .) %>% 
     pull(.resid) %>% 
-    shapiro.test(.)
+    shapiro.test()
 
 # abnormal distribution of residuals for tech data - extremely small p-value
 tech %>% 
@@ -221,10 +221,13 @@ autoplot(acid_lm, which = 1:6, label.size = 3)
 # Let's store the diagnostic values in a variable
 acid_lm_diag <- augment(acid_lm, cocktails)
 
+<<<<<<< HEAD
 # diagnostic plots of tech data
 autoplot(adult_lm, which = 1:6, label.size = 3)
 adult_lm_diag <- augment(adult_lm, tech)
 
+=======
+>>>>>>> master
 # We can single out observations with the slice() function
 cocktails %>% 
     slice(c(9, 41, 42, 44, 45))
