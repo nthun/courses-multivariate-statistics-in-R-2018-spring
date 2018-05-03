@@ -71,7 +71,7 @@ surv_fit_table_html <-
               df = TRUE,
               apply.coef = exp,
               apply.se   = exp,
-              type = "html")
+              type = "text")
 
 # You can save the results using the write_lines() function
 write_lines(surv_fit_table_html, "surv_fit_table.html")
