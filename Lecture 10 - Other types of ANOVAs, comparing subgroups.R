@@ -4,8 +4,64 @@ library(tidyverse)
 library(broom)
 library(ggfortify)
 library(stargazer)
+
+
+# Practice lm!
+# Use the multcomp::sbp dataset
+
 library(multcomp)
 
+# Explore our data first
+sbp
+?sbp
+
+# Make a plot that models the sbp for both genders by age separately
+ggplot(sbp) +
+    aes(x = age, y = sbp, group = gender, color = gender) +
+    geom_point() +
+    geom_smooth(method = "lm")
+
+# Statistical modeling
+# We can have five different models based on all possible variable constellations
+# Model with age as a predictor
+lm_age <- lm(sbp ~ age, data = sbp)
+# Model with gender as predictor
+lm_sex <- lm(sbp ~ gender, data = sbp)
+# Model with both age and gender as predictors (main effects)
+lm_sex_age <- lm(sbp ~ age + gender, data = sbp)
+# Model with both age and gender as predictors (main effects + interaction)
+lm_sex_age_int <- lm(sbp ~ age * gender, data = sbp)
+# Model with both age and gender as predictors (only interaction)
+lm_int <- lm(sbp ~ age : gender, data = sbp)
+
+# Model comparison
+# If you don't have hypotheses (not advised strategy), then use backward elimination. Go for the most complicated model to the least complicated, and exclude all that is not adding to your model
+
+# First, just remove the interaction term
+anova(lm_sex_age_int, lm_sex_age)
+# Also useful to check the AIC and BIC values, and look for a difference of at least 2 between models
+glance(lm_sex_age_int)
+glance(lm_sex_age)
+
+# The conclusion is that the interaction is not making the model better! So remove it
+# Now we assume is that our model is the one without the interaction term
+lm_best <- lm_sex_age
+
+# Next, check if age adds to the explained variance
+anova(lm_best, lm_age)
+# It does, so don't remove it! What about sex?
+anova(lm_best, lm_sex)
+# Sex is important too, so keep it! Nothing left to remove, so now, we can conclude that we've found the best linear model.
+
+# The best model is lm_sex_age (now it is also called lm_best), that explains ~78% of the variability of sbp. 
+glance(lm_best)
+
+stargazer(lm_age, lm_sex, lm_sex_age, lm_int, type = "text")
+# You can also write this this table as an html
+stargazer(lm_null, lm_age, lm_sex_age, lm_int, type = "html") %>% 
+    write_lines("sbp_model.html")
+
+### ANOVA
 # Post-hoc tests for one categorical predictor
 ggplot(PlantGrowth) +
     aes(x = group, y = weight, fill = group) +
@@ -14,7 +70,7 @@ ggplot(PlantGrowth) +
 anova_model <- aov(weight ~ group, data = PlantGrowth)
 TukeyHSD(anova_model)
 
-# Btw, you can add significance to your plots using 
+# Btw, you can add significance to your plots using ggsignif::geom_signif()
 install.packages("ggsignif")
 library(ggsignif)
 
@@ -59,38 +115,12 @@ plant_poly <- aov(weight ~ group, data = PlantGrowth)
 # the quadratic trend is significant, because the category in the middle is smaller than the ones in the center
 summary.lm(plant_poly)
 
-# Practice lm!
-# Use the multcomp::sbp dataset
-?sbp
-lm_null <- lm(sbp ~ 1, data = sbp)
-lm_age <- lm(sbp ~ age, data = sbp)
-lm_sex <- lm(sbp ~ age, data = sbp)
-lm_sex_age <- lm(sbp ~ age + gender, data = sbp)
-lm_int <- lm(sbp ~ age * gender, data = sbp)
-
-# Model comparison
-anova(lm_null, lm_age)
-anova(lm_null, lm_sex)
-anova(lm_age, lm_sex_age)
-anova(lm_sex_age, lm_int)
-
-# The best model is lm_sex_age, that explains 78% of the variability of sbp. 
-broom::glance(lm_sex_age)
-
-stargazer(lm_age, lm_sex_age, lm_int, type = "text")
-stargazer(lm_null, lm_age, lm_sex_age, lm_int, type = "html") %>% 
-    write_lines("sbp_model.html")
-
-# plot
-ggplot(sbp) +
-    aes(x = age, y = sbp, group = gender, color = gender) +
-    geom_point() +
-    geom_smooth(method = "lm")
 
 # Factorial ANOVA
 # We have several categorical predictors
+# Note that you can use the unteraction() function in the group to make subgroups
 ggplot(ToothGrowth) +
-    aes(x = dose, y = len, fill = supp) +
+    aes(x = dose, y = len, fill = supp, group = interaction(supp, dose)) +
     geom_boxplot()
 
 ToothGrowth <-
@@ -106,7 +136,7 @@ summary(tooth_model)
 TukeyHSD(tooth_model) %>% tidy()
 
 # Check residual diagnostics
-autoplot(tooth_model, which = 1:4)
+autoplot(tooth_model, which = 1:6)
 
 
 # Repeated measures ANOVA
@@ -114,22 +144,24 @@ autoplot(tooth_model, which = 1:4)
 install.packages("ez")
 library(ez)
 
+mtept
 ?mtept
 # Prepare data (tidy up)
 df <- 
     multcomp::mtept %>% 
-    mutate(id = row_number()) %>% 
+    rownames_to_column("id") %>% 
     gather(time, value, -treatment, -id) %>% 
     mutate(time = str_sub(time, 2)) %>% 
     as_tibble()
     
 
+# Just plot data for each person
  ggplot(df) + 
         aes(x = time, y = value) + 
          geom_point() +
-         geom_smooth(method = "lm") +
          facet_wrap(~id, scales = "free_y")
 
+ # Perform repeated measures ANOVA
 repeated_anova <-
     ezANOVA(
         dv = .(value),
