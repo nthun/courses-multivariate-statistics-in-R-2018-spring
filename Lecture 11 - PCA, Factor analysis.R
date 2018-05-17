@@ -55,7 +55,8 @@ eb_loadings %>%
 
 # Ok, so how are we using this information?
 # Extract component scores into a tibble
-scores <- pca(eb, nfactors = 3, rotate = "oblimin")$score %>% 
+scores <- 
+    eb_pca_rot$score %>% 
     as_tibble()
 
 # You can use these loadings from further on as any other varable. 
@@ -81,10 +82,45 @@ bfi <-
     select(A1:O5)
 
 # Finding the optimal number of factors
-psych::nfactors(bfi, rotate = "varimax")
-psych::fa.parallel(bfi, fa = "fa", fm = "minres")
+nfactors(bfi, rotate = "varimax")
+fa.parallel(bfi, fa = "fa", fm = "minres")
 
-bfi_efa <- psych::fa(bfi, nfactors = 6, scores = "regression", fm = "ml", rotate = "varimax")
+bfi_efa <- psych::fa(bfi, nfactors = 6, scores = "regression", rotate = "varimax")
+
+# Let's visualize the loadings.
+# Unfortunatelly, the psych package provides rather inconsistent output, so we need to do some ugly data transformation first
+
+bfi_efa$loadings %>% 
+    matrix(ncol = ncol(bfi_efa$loadings)) %>% 
+    as_tibble() %>% 
+    mutate(variable = bfi_efa$loadings %>% rownames()) %>% 
+    gather(factor, loading, -variable) %>% 
+    mutate(sign = if_else(loading >= 0, "positive", "negative")) %>% 
+    ggplot() +
+    aes(y = loading %>% abs(), x = variable %>% fct_rev(), fill = sign, label = round(loading, 2)) +
+    geom_col(position = "dodge") +
+    coord_flip() +
+    geom_text() +
+    facet_wrap(~factor) +
+    labs(y = "Loading strength", x = "Variable")
+
+# It turns out that our 6th factor is not that mmeaningful, so get rid of it
+bfi_efa <- psych::fa(bfi, nfactors = 5, scores = "regression", rotate = "varimax")
+
+# The visualizations shows that the loadings are much better now    
+bfi_efa$loadings %>% 
+    matrix(ncol = ncol(bfi_efa$loadings)) %>% 
+    as_tibble() %>% 
+    mutate(variable = bfi_efa$loadings %>% rownames()) %>% 
+    gather(factor, loading, -variable) %>% 
+    mutate(sign = if_else(loading >= 0, "positive", "negative")) %>% 
+    ggplot() +
+    aes(y = loading %>% abs(), x = variable %>% fct_rev(), fill = sign, label = round(loading, 2)) +
+    geom_col(position = "dodge") +
+    coord_flip() +
+    geom_text() +
+    facet_wrap(~factor) +
+    labs(y = "Loading strength", x = "Variable")
 
 # Show which variables load to which factor the most, and what is the direction
 psych::factor2cluster(bfi_efa)
